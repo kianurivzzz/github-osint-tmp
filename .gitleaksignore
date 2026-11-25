@@ -1,0 +1,4 @@
+42abf5667321bfc262b6107cdfc5e1c10f566b1d:config.py:github-pat:1
+42abf5667321bfc262b6107cdfc5e1c10f566b1d:config.py:telegram-bot-api-token:2
+9fea81ee2289f4c69f1b3cd63ee6f47c908c26b2:.env:telegram-bot-api-token:2
+c581ebbc0f2a6d4e657345103b3ab164226527c8:.env:github-pat:1
