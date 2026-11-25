@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Номер версии без v, например 1.0.0"
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - run: pip install --require-hashes -r requirements.txt
+
+      - run: pytest
+
+      - name: Сборка архива
+        env:
+          VERSION: ${{ inputs.version }}
+        run: git archive --format=tar.gz --prefix="github-osint-$VERSION/" -o "github-osint-$VERSION.tar.gz" HEAD
+
+      - name: Релиз
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: gh release create "v$VERSION" "github-osint-$VERSION.tar.gz" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --generate-notes
+
+  announce:
+    needs: release
+    runs-on: ubuntu-latest
+    environment: telegram
+    steps:
+      - name: Сообщение в Telegram
+        uses: appleboy/telegram-action@214f06cfa3d3a588c1472116889437e7c6fd29b1 # v1.1.1
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: "Вышел ${{ github.repository }} v${{ inputs.version }}"
